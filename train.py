@@ -141,7 +141,7 @@ def main(_):
 
         logger.info("Start training...")
         logger.info("tensorboard --logdir {}".format(tensorboard_dir))
-        gloal_step = 0
+        global_step = 0
 
         for epoch in range(FLAGS.num_epochs):
             # Reset the dataset pointers
@@ -150,8 +150,8 @@ def main(_):
             step = 1
 
             while step < train_batches_per_epoch:
-                gloal_step += 1
-                rate = decay(FLAGS.learning_rate, gloal_step, MAX_STEP)
+                global_step += 1
+                rate = decay(FLAGS.learning_rate, global_step, MAX_STEP)
 
                 batch_xs, batch_ys = train_preprocessor.next_batch(FLAGS.batch_size)
                 summary, loss, _ = sess.run(
@@ -162,12 +162,12 @@ def main(_):
                         y: batch_ys,
                         dropout_keep_prob: 0.5
                     })
-                train_writer.add_summary(summary, gloal_step)
+                train_writer.add_summary(summary, global_step)
 
                 step += 1
 
-                if gloal_step % 10 == 0:
-                    logger.info("epoch {}, step {}, loss {:.6f}".format(epoch, gloal_step, loss))
+                if global_step % 10 == 0:
+                    logger.info("epoch {}, step {}, loss {:.6f}".format(epoch, global_step, loss))
                     test_acc = 0.
                     test_count = 0
 
@@ -178,16 +178,16 @@ def main(_):
                         test_count += 1
                     test_acc_ = test_acc / test_count
                     s = tf.Summary(value=[tf.Summary.Value(tag="accuracy", simple_value=test_acc_)])
-                    test_writer.add_summary(s, gloal_step)
+                    test_writer.add_summary(s, global_step)
                     logger.info("test accuracy: {:.4f}, {}/{}".format(test_acc_, test_acc, test_count))
 
                     # Reset the dataset pointers
                     val_preprocessor.reset_pointer()
 
                 #save checkpoint of the model
-                if gloal_step % 1000 == 0 and gloal_step > 0:
+                if global_step % 1000 == 0 and global_step > 0:
                     logger.info("saving checkpoint of model")
-                    checkpoint_path = os.path.join(checkpoint_dir, 'model_epoch' + str(gloal_step) + '.ckpt')
+                    checkpoint_path = os.path.join(checkpoint_dir, 'model_epoch' + str(global_step) + '.ckpt')
                     saver.save(sess, checkpoint_path)
 
 
